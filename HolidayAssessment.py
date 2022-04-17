@@ -19,16 +19,7 @@ class HolidayList:
     def __init__(self):
         self.innerHolidays = []
            
-    #Add a holiday 
-    def addHoliday(self,holidayObj):
-        try:
-            temp = Holiday(holidayObj.name, holidayObj.date)
-            self.innerHolidays.append(temp)
-            print(f"Successfully added holiday {holidayObj}.")
-        except TypeError:
-            print("Error: that is not a Holiday object.")
-
-    #Check date *************************************************************?
+    #CHECK DATE *************************************************************
     def isValidDate(date):
         format = "%Y-%m-%d"
         x = False
@@ -38,78 +29,84 @@ class HolidayList:
                 x=True
                 return date
             except ValueError:
-                print("Invalid date. Please try again.") 
-                date = input(str("Date (yyyy-mm-dd): "))
+                date = input(str("Error: Please try again. Use form (yyyy-mm-dd): "))
 
-    def findHoliday(self, h):
+    #Add a holiday 
+    def addHoliday(self,holidayObj):
+        try:
+            temp = Holiday(holidayObj.name, holidayObj.date)
+            self.innerHolidays.append(temp)
+            print(f"Successfully added holiday {holidayObj}")
+        except TypeError:
+            print("Error: Wrong type")
+
+    #Find a holiday
+    def findHoliday(self, HolidayName, Date):
         for i in self.innerHolidays:
-            if i.name == h.name and i.date == h.date:
+            if i.name == HolidayName and i.date == Date:
                 return i
-            
         return None
-        # Find Holiday in innerHolidays
-        # Return Holiday
 
-    def removeHoliday(name):
-        list = HolidayList.addHoliday(name)
-        x = False
-        while x is False:
-            if name in list:
-                list.remove[name]
-                print(name + "has been removed from the holiday list.")
-                x is True
-            else:
-                print(name + " not found.")
-        # Find Holiday in innerHolidays by searching the name and date combination.
-        # remove the Holiday from innerHolidays
-        # inform user you deleted the holiday
+    #Remove a holiday
+    def removeHoliday(self, name, date):
+        holiday = self.findHoliday(name, date)
+        if holiday != None:
+            self.innerHolidays.remove(holiday)
+            print(f"Successfully removed {holiday}")
+        else:
+            print(f"Error:{name} is not on {date}")
 
-    def read_json():
-        with open('holidays.json', 'r') as j:
-            data=json.loads(j.read())
-        HolidayList.addHoliday(data)
-        # Read in things from json file location
-        # Use addHoliday function to add holidays to inner list.
+    #Read in holidays.json
+    def read_json(self, file):
+        try:
+            f = open(file, "r")
+            reader = f.read()
+            holidays = json.loads(reader)
+            holidayDict = holidays['holidays']
+        except:
+            print(f"Error: Could not open or load file")
+            return
 
-    def save_to_json():
+        for i in holidayDict:
+            h = Holiday(i["name"],datetime.datetime.fromisoformat(i["date"]))
+            found = self.findHoliday(h.name, h.date)
+            if not found:
+                print(f"Error: Could not add holiday '{h}'")
+                return
+        f.close()
+
+    #Save to json
+    def save_to_json(self):
         with open("holidayList.json", "w") as f:
-            json.dump(innerHolidays, f, indent = 1)
+            json.dump(self.innerHolidays, f, indent = 1)
 
         f.close()
-        # Write out json file to selected file.
 
-    def scrapeHolidays():
-        years = ["2020","2021","2022","2023","2024"]
-        months = {"Jan":"01","Feb":"02","Mar":"03","Apr":"04","May":"05","Jun":"06","Jul":"07","Aug":"08","Sep":"09","Oct":"10","Nov":"11","Dec":"12"}
-
-        for i in years:
+    #Web Scrape all holidays
+    def scrapeHolidays(self):
+        yearList = ["2020","2021","2022","2023","2024"]
+        monthDict = {"Jan":"01","Feb":"02","Mar":"03","Apr":"04","May":"05","Jun":"06","Jul":"07","Aug":"08","Sep":"09","Oct":"10","Nov":"11","Dec":"12"}
+        for i in yearList:
             url = f"https://www.timeanddate.com/holidays/us/{i}"
-            response = requests.get(url).text
-                        
-            soup = BeautifulSoup(response, 'html.parser')
-            holiday_table = soup.find('table',attrs={'id':'holidays-table'})
-            for row in holiday_table.find_all_next('tr',attrs={'class':'showrow'}):
-                date_tag = row.find('th')           #find the tag with the date in it
-                date_text = date_tag.string         #extract the raw string from the tag
-                date_month = date_text[0:2]         #extract the 3-letter month code
-                date_month = months[date_month]     #convert it to number code based on above dictionary
-                date_day = date_text[-2:].strip()   #extract the 2-digit day
-                if len(date_day) == 1:              #if day is only 1 digit (eg. '2')
-                    date_day = f"0{date_day}"       #convert it to 2-digit format (eg. '02')
-                combined_date = f"{i}-{date_month}-{date_day}"  #create formatted date
-                
-                name_tag = row.find('a')            #find the tag with the holiday name
-                name_text = name_tag.string         #extract the string from the tag
-                
-                holi = Holiday(name_text, combined_date)
-                if findHoliday(holi) == False:   #if new holiday is not in the list
-                    addHoliday(holi)            #add it to the list
-        print("Successfully scraped holiday data for 2020-2024")
-        # Scrape Holidays from https://www.timeanddate.com/holidays/us/ 
-        # Remember, 2 previous years, current year, and 2  years into the future. You can scrape multiple years by adding year to the timeanddate URL. For example https://www.timeanddate.com/holidays/us/2022
-        # Check to see if name and date of holiday is in innerHolidays array
-        # Add non-duplicates to innerHolidays
-        # Handle any exceptions.     
+            response = requests.get(url)
+            html = response.text
+            soup = BeautifulSoup(html, 'html.parser')
+            holidayTable = soup.find('tbody')
+            
+            for row in holidayTable.find_all('tr'):
+                if 'hol_' not in row.get('id'):
+                    htmlDate = row.find('th').string[0:3]
+                    month = monthDict[htmlDate]
+                    day = htmlDate[-2:].strip()
+                    if len(day) == 1:
+                        day = f"0{day}"
+                    fullDate = f"{i}-{month}-{day}"
+                    date = datetime.datetime.fromisoformat(fullDate)
+                    findName = row.find('a')
+                    name = findName.string
+                    if self.findHoliday(name, date) == False:
+                        holiday = Holiday(name, date)
+                        self.addHoliday(holiday)
 
     def displayHolidaysInWeek(self):
         for i in self.innerHolidays:
@@ -119,14 +116,18 @@ class HolidayList:
         return print('There are ' + str(len(HolidayList.innerHolidays)) + ' holidays in the file')
         #Return the total number of holidays in innerHolidays
         
-    
-    def filter_holidays_by_week(year, week_number):
+    #Filter by week to get all of the holidays for a specific week of the year
+    def filter_holidays_by_week(self, year, week_number):
 
-        # Use a Lambda function to filter by week number and save this as holidays, use the filter on innerHolidays
-        # Week number is part of the the Datetime object
-        # Cast filter results as list
-        # return your holidays
-        pass
+        while week_number < 1 or week_number > 52:
+            week_number = str(input("Which week? #[1-52, Leave blank for current week]: "))
+            if week_number == "":
+                my_date = datetime.date.today()
+                week_number = my_date.isocalendar().week
+                week_number = int(week_number)
+        yearList = list(filter(lambda x: x.date.year == year, self.innerHolidays))
+        weekList = list(filter(lambda x: x.date.isocalendar().week == week_number, yearList))
+        return weekList
 
     def displayHolidaysInWeek(holidayList):
         for i in holidayList:
@@ -218,7 +219,9 @@ def choice4():
     while valid == False:
         week = str(input("Which week? #[1-52, Leave blank for current week]: "))
         if week == "":
-            #week = current week
+            my_date = datetime.date.today()
+            week = year, week_num, day_of_week = my_date.isocalendar()
+            week = int(week)
             holidayList = [week, year]
             HolidayList.displayHolidaysInWeek(holidayList)
             valid_weather = False
