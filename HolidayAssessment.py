@@ -25,7 +25,7 @@ class HolidayList:
         x = False
         while x == False: 
             try:
-                datetime.datetime.strptime(date,format)
+                date = datetime.datetime.strptime(date,format)
                 x=True
                 return date
             except ValueError:
@@ -115,7 +115,7 @@ class HolidayList:
             print(str(i))
 
     def numHolidays(self):
-        return print('There are ' + str(len(HolidayList.innerHolidays)) + ' holidays in the file')
+        return print('There are ' + str(len(self.innerHolidays)) + ' holidays in the file')
         #Return the total number of holidays in innerHolidays
         
     #Filter by week to get all of the holidays for a specific week of the year
@@ -134,9 +134,6 @@ class HolidayList:
     def displayHolidaysInOtherWeek(holidayList):
         for i in holidayList:
             print(f"{str(i.name)}: {str(i.date)}")
-        # Use your filter_holidays_by_week to get list of holidays within a week as a parameter
-        # Output formated holidays in the week. 
-        # * Remember to use the holiday __str__ method.
 
     def getWeather(weekNum):
         # Convert weekNum to range between two days
@@ -182,7 +179,7 @@ def choice1():
     Name = input(str("Holiday: "))
     Date = input(str("Date (yyyy-mm-dd): "))
     holidayList.isValidDate
-    holidayObj = [Name, Date]
+    holidayObj = Holiday(Name,datetime.datetime.fromisoformat(Date))
     holidayList.addHoliday(holidayObj)
     print("The holiday " + Name + " on " + Date + " has been added to the calendar")
 
@@ -192,7 +189,7 @@ def choice2():
         name = str(input("Holiday Name: "))
         Date = input(str("Date (yyyy-mm-dd): "))
         holidayList.isValidDate
-        holidayList.removeHoliday(name)
+        holidayList.removeHoliday(name, datetime.datetime.fromisoformat(Date))
         print('The holiday ' + name + 'on ' + Date + ' has been removed from the calendar')
 
 def choice3():
@@ -234,7 +231,7 @@ def choice4():
                 if weather != 'y' and weather !='n':
                     print("Please only enter 'y' or 'n'")
                 elif weather == 'y':
-                    HolidayList.getWeather(week)
+                    holidayList.getWeather(week)
                     valid_weather == True
                 else:
                     valid_weather == True
@@ -274,7 +271,7 @@ def main():
     print("There are 10 holidays stored in the system.")
     print(" ")
     print(" ")
-    holidayList.scrapeHolidays()
+    #holidayList.scrapeHolidays()
     end_program = False
     while end_program == False:
         choice = mainMenu()
