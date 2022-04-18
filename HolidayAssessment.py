@@ -162,7 +162,7 @@ class HolidayList:
                     "Low Temperature" : lowTemp,
                     "Wind Speed" : wind,
                     "Cloudiness" : clouds,
-                    "Precipitation" : precipitation * 100
+                    "Precipitation" : precipitation
                 }
             }
             weatherList.append(weatherDict)
@@ -176,7 +176,7 @@ class HolidayList:
             print(f"Low temp: {i['weather']['Low Temperature']} degrees")
             print(f"Wind Speed: {i['weather']['Wind Speed']} mph")
             print(f"Cloudiness: {i['weather']['Cloudiness']}%")
-            print(f"Chance of precipitation: {i['weather']['Precipitation']}%")
+            print(f"Chance of precipitation: {i['weather']['Precipitation']}")
         return
 
 def displayHolidaysInOtherWeek(holidayList):
