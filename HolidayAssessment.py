@@ -137,7 +137,7 @@ class HolidayList:
 
     #Get Weather from API
     def getWeather(self):
-        url = "https://api.openweathermap.org/data/2.5/onecall?lat=44.97&lon=-93.26&exclude=current,minutely,hourly,alerts&units=imperial&appid=7bdf08f87f2b42a9e8956f9905feb0d3"
+        url = "https://api.openweathermap.org/data/2.5/onecall?lat=44.97&lon=-93.26&exclude=current,minutely,hourly,alerts&units=imperial&appid=6d1fb15eebdb2e654de3ac21a4e61679"
         response = requests.get(url)
             
         dates = []
