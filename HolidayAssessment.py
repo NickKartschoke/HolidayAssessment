@@ -114,7 +114,8 @@ class HolidayList:
                 print(f"{str(i.name)}")
 
     def numHolidays(self):
-        return print('There are ' + str(len(self.innerHolidays)) + ' holidays in the file')
+        print('There are ' + str(len(self.innerHolidays)) + ' holidays in the file')
+        return
         #Return the total number of holidays in innerHolidays
         
     #Filter by week to get all of the holidays for a specific week of the year
@@ -294,7 +295,9 @@ def main():
     holidayList.read_json()
     print("Holiday Management")
     print("===================")
+    holidayList.numHolidays()
     holidayList.scrapeHolidays()
+    holidayList.numHolidays()
     print(" ")
     end_program = False
     while end_program == False:
