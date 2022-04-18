@@ -45,7 +45,7 @@ class HolidayList:
         for i in self.innerHolidays:
             if i.name == HolidayName and i.date == Date:
                 return i
-        return None
+        return False
 
     #Remove a holiday
     def removeHoliday(self, name, date):
@@ -57,29 +57,31 @@ class HolidayList:
             print(f"Error:{name} is not on {date}")
 
     #Read in holidays.json
-    def read_json(self, file):
+    def read_json(self):
+        path = r'holidays.json'
         try:
-            f = open(file, "r")
+            f = open(path, "r")
             reader = f.read()
             holidays = json.loads(reader)
             holidayDict = holidays['holidays']
         except:
             print(f"Error: Could not open or load file")
             return
-
-        for i in holidayDict:
-            h = Holiday(i["name"],datetime.datetime.fromisoformat(i["date"]))
-            found = self.findHoliday(h.name, h.date)
-            if not found:
-                print(f"Error: Could not add holiday '{h}'")
-                return
         f.close()
-
+        for i in holidayDict:
+            holiday = Holiday(i["name"],datetime.datetime.fromisoformat(i["date"]))
+            self.addHoliday(holiday)   
+        
     #Save to json
     def save_to_json(self):
-        with open("holidayList.json", "w") as f:
-            json.dump(self.innerHolidays, f, indent = 1)
-
+        with open("holidaysOut.json", "w") as f:
+            f.write("{\n \"Holidays\" :  [\n")
+            for i in self.innerHolidays:
+                f.write("\t{")
+                f.write(f"\n\t\t\"name\": {i.name},\n")
+                f.write(f"\t\t\"date\": \"{i.date}\"\n\t")
+                f.write("},\n")
+            f.write(" ]\n}")
         f.close()
 
     #Web Scrape all holidays
@@ -95,8 +97,8 @@ class HolidayList:
             
             for row in holidayTable.find_all('tr'):
                 if 'hol_' not in row.get('id'):
-                    htmlDate = row.find('th').string[0:3]
-                    month = monthDict[htmlDate]
+                    htmlDate = row.find('th').string
+                    month = monthDict[htmlDate[0:3]]
                     day = htmlDate[-2:].strip()
                     if len(day) == 1:
                         day = f"0{day}"
@@ -129,9 +131,9 @@ class HolidayList:
         weekList = list(filter(lambda x: x.date.isocalendar().week == week_number, yearList))
         return weekList
 
-    def displayHolidaysInWeek(holidayList):
+    def displayHolidaysInOtherWeek(holidayList):
         for i in holidayList:
-            print(str(i))
+            print(f"{str(i.name)}: {str(i.date)}")
         # Use your filter_holidays_by_week to get list of holidays within a week as a parameter
         # Output formated holidays in the week. 
         # * Remember to use the holiday __str__ method.
@@ -152,6 +154,9 @@ class HolidayList:
         # If yes, use your getWeather function and display results
         pass
 
+def displayHolidaysInOtherWeek(holidayList):
+        for i in holidayList:
+            print(str(i.name))
 
 def mainMenu():
     print("Holiday Menu")
@@ -176,9 +181,9 @@ def choice1():
     print("=============")
     Name = input(str("Holiday: "))
     Date = input(str("Date (yyyy-mm-dd): "))
-    HolidayList.isValidDate
+    holidayList.isValidDate
     holidayObj = [Name, Date]
-    HolidayList.addHoliday(holidayObj)
+    holidayList.addHoliday(holidayObj)
     print("The holiday " + Name + " on " + Date + " has been added to the calendar")
 
 def choice2():
@@ -186,8 +191,8 @@ def choice2():
         print ("================")
         name = str(input("Holiday Name: "))
         Date = input(str("Date (yyyy-mm-dd): "))
-        HolidayList.isValidDate
-        HolidayList.removeHoliday(name)
+        holidayList.isValidDate
+        holidayList.removeHoliday(name)
         print('The holiday ' + name + 'on ' + Date + ' has been removed from the calendar')
 
 def choice3():
@@ -199,7 +204,7 @@ def choice3():
         if answer != 'y' and answer != 'n':
             print("Please only enter 'y' or 'n'")
         elif answer == 'y':
-            HolidayList.save_to_json()
+            holidayList.save_to_json()
             print("Success: ")
             print("Your changes have been saved.")
             return
@@ -221,9 +226,8 @@ def choice4():
         if week == "":
             my_date = datetime.date.today()
             week = year, week_num, day_of_week = my_date.isocalendar()
-            week = int(week)
-            holidayList = [week, year]
-            HolidayList.displayHolidaysInWeek(holidayList)
+            l = holidayList.filter_holidays_by_week(year, week)
+            displayHolidaysInOtherWeek(l)
             valid_weather = False
             while valid_weather == False:
                 weather = str(input("Would you like to see this week's weather? [y/n]: "))
@@ -239,14 +243,13 @@ def choice4():
             break
         week = int(week)
         if week in range (1, 53):
-            holidayList = [week, year]
             print("These are the holidays for " + str(year) + " week #" + str(week) + " :")
-            HolidayList.displayHolidaysInWeek(holidayList)
+            l = holidayList.filter_holidays_by_week(year, week)
+            displayHolidaysInOtherWeek(l)
             break
         else:
             print("Please enter a valid week")
             continue  
-    HolidayList.filter_holidays_by_week(year, week)
 def choice5():
     print("Exit")
     print("=====")
@@ -262,15 +265,16 @@ def choice5():
             exit_valid = True
     return exit
    
+holidayList = HolidayList()
 
 def main():
-    HolidayList.read_json()
+    holidayList.read_json()
     print("Holiday Management")
     print("===================")
     print("There are 10 holidays stored in the system.")
     print(" ")
     print(" ")
-    HolidayList.scrapeHolidays()
+    holidayList.scrapeHolidays()
     end_program = False
     while end_program == False:
         choice = mainMenu()
