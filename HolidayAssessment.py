@@ -36,7 +36,6 @@ class HolidayList:
         try:
             temp = Holiday(holidayObj.name, holidayObj.date)
             self.innerHolidays.append(temp)
-            print(f"Successfully added holiday {holidayObj}")
         except TypeError:
             print("Error: Wrong type")
 
@@ -52,7 +51,6 @@ class HolidayList:
         holiday = self.findHoliday(name, date)
         if holiday != None:
             self.innerHolidays.remove(holiday)
-            print(f"Successfully removed {holiday}")
         else:
             print(f"Error:{name} is not on {date}")
 
@@ -110,9 +108,10 @@ class HolidayList:
                         holiday = Holiday(name, date)
                         self.addHoliday(holiday)
 
-    def displayHolidaysInWeek(self):
+    def displayHolidays(self,date):
         for i in self.innerHolidays:
-            print(str(i))
+            if i.date == date:
+                print(f"{str(i.name)}")
 
     def numHolidays(self):
         return print('There are ' + str(len(self.innerHolidays)) + ' holidays in the file')
@@ -130,11 +129,13 @@ class HolidayList:
         yearList = list(filter(lambda x: x.date.year == year, self.innerHolidays))
         weekList = list(filter(lambda x: x.date.isocalendar().week == week_number, yearList))
         return weekList
-
-    def displayHolidaysInOtherWeek(holidayList):
+    
+    #Display function, I don't even use the other one
+    def displayHolidaysInOtherWeek(self, holidayList):
         for i in holidayList:
             print(f"{str(i.name)}: {str(i.date)}")
 
+    #Get Weather from API
     def getWeather(self):
         url = "https://api.openweathermap.org/data/2.5/onecall?lat=44.97&lon=-93.26&exclude=current,minutely,hourly,alerts&units=imperial&appid=7bdf08f87f2b42a9e8956f9905feb0d3"
         response = requests.get(url)
@@ -155,9 +156,9 @@ class HolidayList:
             clouds = forecast[i]["clouds"]
             precipitation = forecast[i]["pop"]
             weatherDict = {
-                "date" : dates[i],
+                "date" : str(dates[i]),
                 "weather" : {
-                    "High Termperature" : highTemp,
+                    "High Temperature" : highTemp,
                     "Low Temperature" : lowTemp,
                     "Wind Speed" : wind,
                     "Cloudiness" : clouds,
@@ -165,16 +166,18 @@ class HolidayList:
                 }
             }
             weatherList.append(weatherDict)
-        return weatherDict
+        return weatherList
 
-    def viewCurrentWeek():
-        # Use the Datetime Module to look up current week and year
-        # Use your filter_holidays_by_week function to get the list of holidays 
-        # for the current week/year
-        # Use your displayHolidaysInWeek function to display the holidays in the week
-        # Ask user if they want to get the weather
-        # If yes, use your getWeather function and display results
-        pass
+    def viewCurrentWeek(self,days,weather):
+        for i in weather:
+            print(i["date"][0:10],":")
+            self.displayHolidays(datetime.datetime.fromisoformat(i["date"][0:10]))
+            print(f"High temp: {i['weather']['High Temperature']} degrees")
+            print(f"Low temp: {i['weather']['Low Temperature']} degrees")
+            print(f"Wind Speed: {i['weather']['Wind Speed']} mph")
+            print(f"Cloudiness: {i['weather']['Cloudiness']}%")
+            print(f"Chance of precipitation: {i['weather']['Precipitation']}%")
+        return
 
 def displayHolidaysInOtherWeek(holidayList):
         for i in holidayList:
@@ -215,7 +218,7 @@ def choice2():
         Date = input(str("Date (yyyy-mm-dd): "))
         holidayList.isValidDate
         holidayList.removeHoliday(name, datetime.datetime.fromisoformat(Date))
-        print('The holiday ' + name + 'on ' + Date + ' has been removed from the calendar')
+        print('The holiday ' + name + ' on ' + Date + ' has been removed from the calendar')
 
 def choice3():
     print("Saving Holiday List")
@@ -249,7 +252,6 @@ def choice4():
             my_date = datetime.date.today()
             week = my_date.isocalendar().week
             l = holidayList.filter_holidays_by_week(year, week)
-            displayHolidaysInOtherWeek(l)
             valid_weather = False
             while valid_weather == False:
                 weather = str(input("Would you like to see this week's weather? [y/n]: "))
@@ -257,15 +259,16 @@ def choice4():
                     print("Please only enter 'y' or 'n'")
                 elif weather == 'y':
                     weather = holidayList.getWeather()
+                    holidayList.viewCurrentWeek(l,weather)
                     valid_weather = True
                 else:
                     valid_weather = True
-
+            break
         week = int(week)
         if week in range (1, 53):
             print("These are the holidays for " + str(year) + " week #" + str(week) + " :")
             l = holidayList.filter_holidays_by_week(year, week)
-            holidayList.viewCurrentWeek(l,weather)
+            holidayList.displayHolidaysInOtherWeek(l)
             break
         else:
             print("Please enter a valid week")
@@ -291,10 +294,8 @@ def main():
     holidayList.read_json()
     print("Holiday Management")
     print("===================")
-    print("There are 10 holidays stored in the system.")
+    holidayList.scrapeHolidays()
     print(" ")
-    print(" ")
-    #holidayList.scrapeHolidays()
     end_program = False
     while end_program == False:
         choice = mainMenu()
