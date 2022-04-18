@@ -135,12 +135,37 @@ class HolidayList:
         for i in holidayList:
             print(f"{str(i.name)}: {str(i.date)}")
 
-    def getWeather(weekNum):
-        # Convert weekNum to range between two days
-        # Use Try / Except to catch problems
-        # Query API for weather in that week range
-        # Format weather information and return weather string.
-        pass
+    def getWeather(self):
+        url = "https://api.openweathermap.org/data/2.5/onecall?lat=44.97&lon=-93.26&exclude=current,minutely,hourly,alerts&units=imperial&appid=7bdf08f87f2b42a9e8956f9905feb0d3"
+        response = requests.get(url)
+            
+        dates = []
+        today = datetime.datetime.today()
+        for i in range(1,7):
+            dates.append(today)
+            today += datetime.timedelta(days=1)
+        
+        weather = response.json()
+        forecast = weather['daily']
+        weatherList = []
+        for i in range(6):
+            highTemp = forecast[i]["temp"]["max"]
+            lowTemp = forecast[i]["temp"]["min"]
+            wind = forecast[i]["wind_speed"]
+            clouds = forecast[i]["clouds"]
+            precipitation = forecast[i]["pop"]
+            weatherDict = {
+                "date" : dates[i],
+                "weather" : {
+                    "High Termperature" : highTemp,
+                    "Low Temperature" : lowTemp,
+                    "Wind Speed" : wind,
+                    "Cloudiness" : clouds,
+                    "Precipitation" : precipitation * 100
+                }
+            }
+            weatherList.append(weatherDict)
+        return weatherDict
 
     def viewCurrentWeek():
         # Use the Datetime Module to look up current week and year
@@ -222,7 +247,7 @@ def choice4():
         week = str(input("Which week? #[1-52, Leave blank for current week]: "))
         if week == "":
             my_date = datetime.date.today()
-            week = year, week_num, day_of_week = my_date.isocalendar()
+            week = my_date.isocalendar().week
             l = holidayList.filter_holidays_by_week(year, week)
             displayHolidaysInOtherWeek(l)
             valid_weather = False
@@ -231,18 +256,16 @@ def choice4():
                 if weather != 'y' and weather !='n':
                     print("Please only enter 'y' or 'n'")
                 elif weather == 'y':
-                    holidayList.getWeather(week)
-                    valid_weather == True
+                    weather = holidayList.getWeather()
+                    valid_weather = True
                 else:
-                    valid_weather == True
-            print("These are the holidays for this week:")
+                    valid_weather = True
 
-            break
         week = int(week)
         if week in range (1, 53):
             print("These are the holidays for " + str(year) + " week #" + str(week) + " :")
             l = holidayList.filter_holidays_by_week(year, week)
-            displayHolidaysInOtherWeek(l)
+            holidayList.viewCurrentWeek(l,weather)
             break
         else:
             print("Please enter a valid week")
