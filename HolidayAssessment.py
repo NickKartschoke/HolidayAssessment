@@ -99,7 +99,7 @@ class HolidayList:
                     month = monthDict[htmlDate[0:3]]
                     day = htmlDate[-2:].strip()
                     if len(day) == 1:
-                        day = f"0{day}"
+                        day = "0"+day
                     fullDate = f"{i}-{month}-{day}"
                     date = datetime.datetime.fromisoformat(fullDate)
                     findName = row.find('a')
@@ -294,7 +294,7 @@ def main():
     holidayList.read_json()
     print("Holiday Management")
     print("===================")
-    #holidayList.scrapeHolidays()
+    holidayList.scrapeHolidays()
     print(" ")
     end_program = False
     while end_program == False:
