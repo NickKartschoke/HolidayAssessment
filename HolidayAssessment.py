@@ -294,7 +294,7 @@ def main():
     holidayList.read_json()
     print("Holiday Management")
     print("===================")
-    #holidayList.scrapeHolidays()
+    holidayList.scrapeHolidays()
     print(" ")
     end_program = False
     while end_program == False:
